@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-""" User module
+"""User module.
 """
 import hashlib
-import uuid
 from models.base import Base
 
 
 class User(Base):
-    """ User class
+    """User class.
     """
-    _users = {}
 
     def __init__(self, *args: list, **kwargs: dict):
-        """ Initialize a User instance
+        """Initialize a User instance.
         """
         super().__init__(*args, **kwargs)
         self.email = kwargs.get('email')
@@ -22,13 +20,16 @@ class User(Base):
 
     @property
     def password(self) -> str:
-        """ Getter of the password
+        """Getter of the password.
         """
         return self._password
 
     @password.setter
     def password(self, pwd: str):
-        """ Setter of a new password: encrypt in SHA256
+        """Setter of a new password: encrypt in SHA256.
+
+        WARNING: Use a better password hashing algorithm like argon2
+        or bcrypt in real-world projects.
         """
         if pwd is None or type(pwd) is not str:
             self._password = None
@@ -36,7 +37,7 @@ class User(Base):
             self._password = hashlib.sha256(pwd.encode()).hexdigest().lower()
 
     def is_valid_password(self, pwd: str) -> bool:
-        """ Validate a password
+        """Validate a password.
         """
         if pwd is None or type(pwd) is not str:
             return False
@@ -46,7 +47,7 @@ class User(Base):
         return hashlib.sha256(pwd_e).hexdigest().lower() == self.password
 
     def display_name(self) -> str:
-        """ Display User name based on email/first_name/last_name
+        """Display User name based on email/first_name/last_name.
         """
         if self.email is None and self.first_name is None \
                 and self.last_name is None:
@@ -59,40 +60,3 @@ class User(Base):
             return "{}".format(self.last_name)
         else:
             return "{} {}".format(self.first_name, self.last_name)
-
-    def save(self) -> str:
-        """Save current instance"""
-        super().save()
-        User._users[self.id] = self
-
-    def remove(self) -> str:
-        """Remove current instance"""
-        if self.id in User._users:
-            del User._users[self.id]
-
-    @classmethod
-    def get(cls, user_id: str):
-        """Retrieve a User instance based on ID"""
-        if user_id is None:
-            return None
-        return cls._users.get(user_id)
-
-    @classmethod
-    def all(cls):
-        """Return all User instances"""
-        return list(cls._users.values())
-
-    @classmethod
-    def count(cls):
-        """Count all users"""
-        return len(cls._users)
-
-    @classmethod
-    def search(cls, attributes: dict):
-        """Search users by attributes"""
-        users = []
-        for user in cls._users.values():
-            for key, value in attributes.items():
-                if hasattr(user, key) and getattr(user, key) == value:
-                    users.append(user)
-        return users
